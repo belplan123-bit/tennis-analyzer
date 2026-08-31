@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная - Теннис Анализатор{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center my-5">
+        <h1 class="display-4">🎾 Анализ теннисных матчей</h1>
+        <p class="lead">Профессиональный анализ и прогнозы на теннисные матчи</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">📊 Анализ матча</h5>
+                <p class="card-text">Детальный анализ предстоящего матча с прогнозами</p>
+                <a href="/analysis" class="btn btn-primary">Начать анализ</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">🏦 Сравнение с букмекерами</h5>
+                <p class="card-text">Сравнение коэффициентов с ведущими букмекерами</p>
+                <a href="/comparison" class="btn btn-primary">Сравнить</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">📈 История ставок</h5>
+                <p class="card-text">Отслеживание ваших ставок и результатов</p>
+                <a href="/history" class="btn btn-primary">Просмотреть</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

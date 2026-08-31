@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Анализ матча - Теннис Анализатор{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Анализ теннисного матча</h2>
+    </div>
+</div>
+
+<!-- Ввод URL -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>🔗 Загрузка по ссылке</h5>
+    </div>
+    <div class="card-body">
+        <div class="input-group">
+            <input type="url" id="matchUrl" class="form-control" placeholder="Вставьте ссылку на матч">
+            <button class="btn btn-primary" onclick="loadFromUrl()">Загрузить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Ручной ввод -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>👥 Данные игроков</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Игрок 1 -->
+            <div class="col-md-6">
+                <h4>Игрок 1</h4>
+                <div class="mb-3">
+                    <label class="form-label">Имя</label>
+                    <input type="text" id="p1Name" class="form-control" value="Новак Джокович">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Рейтинг ATP</label>
+                    <input type="number" id="p1Rating" class="form-control" value="1">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Процент побед (%)</label>
+                    <input type="number" id="p1WinRate" class="form-control" value="83">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Победы на покрытии (%)</label>
+                    <input type="number" id="p1SurfaceWinRate" class="form-control" value="80">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Победы в личных встречах</label>
+                    <input type="number" id="p1H2H" class="form-control" value="5">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Текущая форма (0-100)</label>
+                    <input type="number" id="p1Form" class="form-control" value="85">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Статус травмы</label>
+                    <select id="p1Injury" class="form-control">
+                        <option value="healthy">Здоров</option>
+                        <option value="questionable">Под вопросом</option>
+                        <option value="injured">Травмирован</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Уровень усталости (0-100)</label>
+                    <input type="number" id="p1Fatigue" class="form-control" value="20">
+                </div>
+            </div>
+            
+            <!-- Игрок 2 -->
+            <div class="col-md-6">
+                <h4>Игрок 2</h4>
+                <!-- Аналогичные поля для игрока 2 -->
+                <div class="mb-3">
+                    <label class="form-label">Имя</label>
+                    <input type="text" id="p2Name" class="form-control" value="Карлос Алькарас">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Рейтинг ATP</label>
+                    <input type="number" id="p2Rating" class="form-control" value="2">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Процент побед (%)</label>
+                    <input type="number" id="p2WinRate" class="form-control" value="79">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Победы на покрытии (%)</label>
+                    <input type="number" id="p2SurfaceWinRate" class="form-control" value="75">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Победы в личных встречах</label>
+                    <input type="number" id="p2H2H" class="form-control" value="3">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Текущая форма (0-100)</label>
+                    <input type="number" id="p2Form" class="form-control" value="82">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Статус травмы</label>
+                    <select id="p2Injury" class="form-control">
+                        <option value="healthy">Здоров</option>
+                        <option value="questionable">Под вопросом</option>
+                        <option value="injured">Травмирован</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Уровень усталости (0-100)</label>
+                    <input type="number" id="p2Fatigue" class="form-control" value="25">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Коэффициенты букмекеров -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <h4>Коэффициенты букмекеров</h4>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Коэффициент на победу Игрока 1</label>
+                    <input type="number" step="0.01" id="p1Odds" class="form-control" value="2.10">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Коэффициент на победу Игрока 2</label>
+                    <input type="number" step="0.01" id="p2Odds" class="form-control" value="1.85">
+                </div>
+            </div>
+        </div>
+        
+        <button class="btn btn-primary btn-lg mt-3" onclick="analyzeMatch()">Анализировать</button>
+    </div>
+</div>
+
+<!-- Результаты -->
+<div id="results" class="card" style="display:none;">
+    <div class="card-header">
+        <h5>📊 Результаты анализа</h5>
+    </div>
+    <div class="card-body" id="resultsBody">
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function analyzeMatch() {
+    const data = {
+        player1: {
+            name: document.getElementById('p1Name').value,
+            rating: parseInt(document.getElementById('p1Rating').value),
+            win_rate: parseFloat(document.getElementById('p1WinRate').value) / 100,
+            surface_win_rate: parseFloat(document.getElementById('p1SurfaceWinRate').value) / 100,
+            head_to_head_wins: parseInt(document.getElementById('p1H2H').value),
+            recent_form: parseFloat(document.getElementById('p1Form').value) / 100,
+            injury_status: document.getElementById('p1Injury').value,
+            fatigue_level: parseFloat(document.getElementById('p1Fatigue').value) / 100
+        },
+        player2: {
+            name: document.getElementById('p2Name').value,
+            rating: parseInt(document.getElementById('p2Rating').value),
+            win_rate: parseFloat(document.getElementById('p2WinRate').value) / 100,
+            surface_win_rate: parseFloat(document.getElementById('p2SurfaceWinRate').value) / 100,
+            head_to_head_wins: parseInt(document.getElementById('p2H2H').value),
+            recent_form: parseFloat(document.getElementById('p2Form').value) / 100,
+            injury_status: document.getElementById('p2Injury').value,
+            fatigue_level: parseFloat(document.getElementById('p2Fatigue').value) / 100
+        }
+    };
+    
+    fetch('/analysis', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        displayResults(result);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при анализе');
+    });
+}
+
+function loadFromUrl() {
+    const url = document.getElementById('matchUrl').value;
+    
+    fetch('/api/analyze/url', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({url: url})
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            // Заполнение формы данными
+            fillForm(result.data);
+        } else {
+            alert('Не удалось загрузить данные');
+        }
+    });
+}
+
+function fillForm(data) {
+    // Заполнение полей формы данными из URL
+    document.getElementById('p1Name').value = data.player1.name;
+    document.getElementById('p2Name').value = data.player2.name;
+    // ... заполнение остальных полей
+}
+
+function displayResults(results) {
+    document.getElementById('results').style.display = 'block';
+    
+    const html = `
+        <h4>Вероятность победы:</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <p>${results.player1.name}: ${(results.match_winner.player1 * 100).toFixed(1)}%</p>
+                <p>Справедливый коэффициент: ${results.match_winner.fair_odds.player1}</p>
+            </div>
+            <div class="col-md-6">
+                <p>${results.player2.name}: ${(results.match_winner.player2 * 100).toFixed(1)}%</p>
+                <p>Справедливый коэффициент: ${results.match_winner.fair_odds.player2}</p>
+            </div>
+        </div>
+        <hr>
+        <h4>Прогноз на сеты:</h4>
+        <div id="setsChart"></div>
+        <hr>
+        <h4>Прогноз на геймы:</h4>
+        <p>Всего геймов: ${results.games.total_games}</p>
+        <p>Тотал больше 22.5: ${(results.games.over_22.5_probability * 100).toFixed(1)}%</p>
+        <p>Тотал меньше 22.5: ${(results.games.under_22.5_probability * 100).toFixed(1)}%</p>
+    `;
+    
+    document.getElementById('resultsBody').innerHTML = html;
+}
+</script>
+{% endblock %}
