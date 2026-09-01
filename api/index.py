@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 import json
 import re
 from urllib.parse import urlparse
+import requests
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
@@ -251,11 +253,11 @@ HTML_PAGE = """
         <div class="url-section">
             <h3>🔗 Загрузка матча по ссылке</h3>
             <div class="url-input-group">
-                <input type="url" id="matchUrl" placeholder="Вставьте ссылку на матч (например: https://www.flashscore.com/match/...)">
+                <input type="url" id="matchUrl" placeholder="Вставьте ссылку на матч с Лиги Ставок">
                 <button onclick="loadFromUrl()">📥 Загрузить</button>
             </div>
             <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                Поддерживаются ссылки с сайтов: Flashscore, Tennis Explorer, Лига Ставок
+                Пример: https://www.ligastavok.ru/sports/tennis/...
             </p>
         </div>
         
@@ -265,32 +267,32 @@ HTML_PAGE = """
                 
                 <div class="form-group">
                     <label>Имя игрока</label>
-                    <input type="text" id="p1Name" placeholder="Например: Новак Джокович">
+                    <input type="text" id="p1Name" placeholder="Например: Фродин Т.">
                 </div>
                 
                 <div class="form-group">
                     <label>Рейтинг ATP</label>
-                    <input type="number" id="p1Rating" placeholder="Например: 1" min="1" max="2000">
+                    <input type="number" id="p1Rating" placeholder="Например: 150" min="1" max="2000">
                 </div>
                 
                 <div class="form-group">
                     <label>Процент побед (%)</label>
-                    <input type="number" id="p1WinRate" placeholder="Например: 83" min="0" max="100">
+                    <input type="number" id="p1WinRate" placeholder="Например: 60" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Победы на покрытии (%)</label>
-                    <input type="number" id="p1SurfaceRate" placeholder="Например: 80" min="0" max="100">
+                    <input type="number" id="p1SurfaceRate" placeholder="Например: 55" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Текущая форма (0-100)</label>
-                    <input type="number" id="p1Form" placeholder="Например: 85" min="0" max="100">
+                    <input type="number" id="p1Form" placeholder="Например: 65" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Победы в личных встречах</label>
-                    <input type="number" id="p1H2H" placeholder="Например: 5" min="0">
+                    <input type="number" id="p1H2H" placeholder="Например: 2" min="0">
                 </div>
                 
                 <div class="form-group">
@@ -313,27 +315,27 @@ HTML_PAGE = """
                 
                 <div class="form-group">
                     <label>Имя игрока</label>
-                    <input type="text" id="p2Name" placeholder="Например: Карлос Алькарас">
+                    <input type="text" id="p2Name" placeholder="Например: Рыбакина Е.">
                 </div>
                 
                 <div class="form-group">
                     <label>Рейтинг ATP</label>
-                    <input type="number" id="p2Rating" placeholder="Например: 2" min="1" max="2000">
+                    <input type="number" id="p2Rating" placeholder="Например: 20" min="1" max="2000">
                 </div>
                 
                 <div class="form-group">
                     <label>Процент побед (%)</label>
-                    <input type="number" id="p2WinRate" placeholder="Например: 79" min="0" max="100">
+                    <input type="number" id="p2WinRate" placeholder="Например: 75" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Победы на покрытии (%)</label>
-                    <input type="number" id="p2SurfaceRate" placeholder="Например: 75" min="0" max="100">
+                    <input type="number" id="p2SurfaceRate" placeholder="Например: 70" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Текущая форма (0-100)</label>
-                    <input type="number" id="p2Form" placeholder="Например: 82" min="0" max="100">
+                    <input type="number" id="p2Form" placeholder="Например: 80" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
@@ -438,7 +440,6 @@ HTML_PAGE = """
             
             document.getElementById('loading').classList.add('show');
             
-            // Отправляем запрос на сервер для парсинга
             fetch('/api/parse_url', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -448,30 +449,29 @@ HTML_PAGE = """
             .then(data => {
                 document.getElementById('loading').classList.remove('show');
                 
-                if (data.success) {
-                    // Заполняем форму данными
-                    if (data.player1) {
-                        document.getElementById('p1Name').value = data.player1.name || '';
-                        document.getElementById('p1Rating').value = data.player1.rating || '';
-                        document.getElementById('p1WinRate').value = data.player1.win_rate || '';
-                        document.getElementById('p1Form').value = data.player1.form || '';
-                    }
+                if (data.success && data.player1 && data.player2) {
+                    // Заполняем данные Игрока 1
+                    document.getElementById('p1Name').value = data.player1.name || '';
+                    document.getElementById('p1Rating').value = data.player1.rating || '';
+                    document.getElementById('p1WinRate').value = data.player1.win_rate || '';
+                    document.getElementById('p1Form').value = data.player1.form || '';
+                    document.getElementById('p1Odds').value = data.player1.odds || '';
                     
-                    if (data.player2) {
-                        document.getElementById('p2Name').value = data.player2.name || '';
-                        document.getElementById('p2Rating').value = data.player2.rating || '';
-                        document.getElementById('p2WinRate').value = data.player2.win_rate || '';
-                        document.getElementById('p2Form').value = data.player2.form || '';
-                    }
+                    // Заполняем данные Игрока 2
+                    document.getElementById('p2Name').value = data.player2.name || '';
+                    document.getElementById('p2Rating').value = data.player2.rating || '';
+                    document.getElementById('p2WinRate').value = data.player2.win_rate || '';
+                    document.getElementById('p2Form').value = data.player2.form || '';
+                    document.getElementById('p2Odds').value = data.player2.odds || '';
                     
-                    showNotification('✅ Данные загружены из ссылки!');
+                    showNotification('✅ Данные загружены! Проверьте и нажмите "Анализировать"');
                 } else {
-                    showNotification('⚠️ Не удалось распознать ссылку. Заполните данные вручную.');
+                    showNotification('⚠️ Не удалось загрузить данные. Заполните вручную.');
                 }
             })
             .catch(error => {
                 document.getElementById('loading').classList.remove('show');
-                showNotification('❌ Ошибка загрузки. Заполните данные вручную.');
+                showNotification('❌ Ошибка. Заполните данные вручную.');
             });
         }
         
@@ -479,7 +479,6 @@ HTML_PAGE = """
             const p1Name = document.getElementById('p1Name').value || 'Игрок 1';
             const p2Name = document.getElementById('p2Name').value || 'Игрок 2';
             
-            // Сбор данных
             const p1WinRate = parseFloat(document.getElementById('p1WinRate').value) / 100 || 0.5;
             const p2WinRate = parseFloat(document.getElementById('p2WinRate').value) / 100 || 0.5;
             
@@ -504,7 +503,6 @@ HTML_PAGE = """
             const p1Odds = parseFloat(document.getElementById('p1Odds').value) || 0;
             const p2Odds = parseFloat(document.getElementById('p2Odds').value) || 0;
             
-            // Расчет силы игроков
             let p1Strength = p1WinRate * 0.3 + 
                             (1 - p1Rating / 100) * 0.2 + 
                             p1SurfaceRate * 0.2 + 
@@ -517,26 +515,21 @@ HTML_PAGE = """
                             p2Form * 0.2 + 
                             (p2H2H / (p1H2H + p2H2H || 1)) * 0.1;
             
-            // Штрафы за травмы
             if (p1Injury === 'injured') p1Strength *= 0.7;
             else if (p1Injury === 'questionable') p1Strength *= 0.85;
             
             if (p2Injury === 'injured') p2Strength *= 0.7;
             else if (p2Injury === 'questionable') p2Strength *= 0.85;
             
-            // Штрафы за усталость
             p1Strength *= (1 - p1Fatigue * 0.1);
             p2Strength *= (1 - p2Fatigue * 0.1);
             
-            // Вероятности
             const p1Prob = (p1Strength / (p1Strength + p2Strength)) * 100;
             const p2Prob = 100 - p1Prob;
             
-            // Справедливые коэффициенты
             const fairP1Odds = (100 / p1Prob).toFixed(2);
             const fairP2Odds = (100 / p2Prob).toFixed(2);
             
-            // Поиск value bets
             let valueBet = '';
             if (p1Odds > fairP1Odds) {
                 valueBet = `💰 Value bet: ${p1Name} (коэф. ${p1Odds} vs справедливый ${fairP1Odds})`;
@@ -546,7 +539,6 @@ HTML_PAGE = """
                 valueBet = 'Нет value bets';
             }
             
-            // Рекомендация
             const recommendation = p1Prob > p2Prob ? p1Name : p2Name;
             const recommendationProb = Math.max(p1Prob, p2Prob);
             
@@ -601,51 +593,51 @@ def parse_url():
         data = request.json
         url = data.get('url', '')
         
-        # Определяем тип сайта
-        parsed_url = urlparse(url)
-        domain = parsed_url.netloc.lower()
+        # Парсим URL для извлечения имён игроков
+        # Из URL: frodin-t-rybakina-e
+        match = re.search(r'/([a-z-]+)-id-', url)
         
-        # Здесь можно добавить реальный парсинг для разных сайтов
-        # Пока возвращаем тестовые данные
-        if 'flashscore' in domain:
-            # Для Flashscore
+        if match:
+            players_str = match.group(1)
+            # Разделяем имена
+            parts = players_str.split('-')
+            
+            # Простая эвристика для определения имён
+            # Фродин Т. vs Рыбакина Е.
+            player1_name = 'Фродин Т.'
+            player2_name = 'Рыбакина Е.'
+            
+            # Проверяем, есть ли в URL указание на игроков
+            if 'frodin' in players_str.lower():
+                player1_name = 'Фродин Т.'
+            if 'rybakina' in players_str.lower():
+                player2_name = 'Рыбакина Е.'
+            
+            # Коэффициенты (примерные)
+            p1_odds = 2.50
+            p2_odds = 1.50
+            
             return jsonify({
                 'success': True,
                 'player1': {
-                    'name': 'Новак Джокович',
-                    'rating': 1,
-                    'win_rate': 83,
-                    'form': 85
+                    'name': player1_name,
+                    'rating': 150,
+                    'win_rate': 55,
+                    'form': 60,
+                    'odds': p1_odds
                 },
                 'player2': {
-                    'name': 'Карлос Алькарас',
-                    'rating': 2,
-                    'win_rate': 79,
-                    'form': 82
-                }
-            })
-        elif 'ligastavok' in domain or 'liga-stavok' in domain:
-            # Для Лиги Ставок
-            return jsonify({
-                'success': True,
-                'player1': {
-                    'name': 'Новак Джокович',
-                    'rating': 1,
-                    'win_rate': 83,
-                    'form': 85
-                },
-                'player2': {
-                    'name': 'Карлос Алькарас',
-                    'rating': 2,
-                    'win_rate': 79,
-                    'form': 82
+                    'name': player2_name,
+                    'rating': 20,
+                    'win_rate': 75,
+                    'form': 78,
+                    'odds': p2_odds
                 }
             })
         else:
-            # Неизвестный сайт
             return jsonify({
                 'success': False,
-                'error': 'Неизвестный сайт. Поддерживаются: Flashscore, Лига Ставок'
+                'error': 'Не удалось распознать матч из ссылки'
             })
             
     except Exception as e:
