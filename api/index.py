@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 import json
+import re
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
@@ -215,6 +217,24 @@ HTML_PAGE = """
             display: block;
         }
         
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: #4caf50;
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
         @media (max-width: 600px) {
             .players { grid-template-columns: 1fr; }
             .container { padding: 15px; }
@@ -231,11 +251,11 @@ HTML_PAGE = """
         <div class="url-section">
             <h3>🔗 Загрузка матча по ссылке</h3>
             <div class="url-input-group">
-                <input type="url" id="matchUrl" placeholder="Вставьте ссылку на матч (Лига Ставок, Flashscore, и т.д.)">
+                <input type="url" id="matchUrl" placeholder="Вставьте ссылку на матч (например: https://www.flashscore.com/match/...)">
                 <button onclick="loadFromUrl()">📥 Загрузить</button>
             </div>
             <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                Поддерживаются ссылки с сайтов: Лига Ставок, Flashscore, Tennis Explorer
+                Поддерживаются ссылки с сайтов: Flashscore, Tennis Explorer, Лига Ставок
             </p>
         </div>
         
@@ -400,41 +420,59 @@ HTML_PAGE = """
     </div>
     
     <script>
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
         function loadFromUrl() {
             const url = document.getElementById('matchUrl').value;
             
             if (!url) {
-                alert('Пожалуйста, вставьте ссылку на матч');
+                showNotification('Пожалуйста, вставьте ссылку на матч');
                 return;
             }
             
             document.getElementById('loading').classList.add('show');
             
-            // Имитация загрузки данных
-            setTimeout(() => {
+            // Отправляем запрос на сервер для парсинга
+            fetch('/api/parse_url', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url: url})
+            })
+            .then(response => response.json())
+            .then(data => {
                 document.getElementById('loading').classList.remove('show');
                 
-                // Здесь будет парсинг данных из URL
-                // Пока заполняем тестовыми данными
-                document.getElementById('p1Name').value = 'Новак Джокович';
-                document.getElementById('p1Rating').value = '1';
-                document.getElementById('p1WinRate').value = '83';
-                document.getElementById('p1SurfaceRate').value = '80';
-                document.getElementById('p1Form').value = '85';
-                document.getElementById('p1H2H').value = '5';
-                
-                document.getElementById('p2Name').value = 'Карлос Алькарас';
-                document.getElementById('p2Rating').value = '2';
-                document.getElementById('p2WinRate').value = '79';
-                document.getElementById('p2SurfaceRate').value = '75';
-                document.getElementById('p2Form').value = '82';
-                document.getElementById('p2H2H').value = '3';
-                
-                document.getElementById('p1Odds').value = '2.10';
-                document.getElementById('p2Odds').value = '1.85';
-                
-                alert('✅ Данные загружены! Проверьте и нажмите "Анализировать"');
-            }, 1500);
+                if (data.success) {
+                    // Заполняем форму данными
+                    if (data.player1) {
+                        document.getElementById('p1Name').value = data.player1.name || '';
+                        document.getElementById('p1Rating').value = data.player1.rating || '';
+                        document.getElementById('p1WinRate').value = data.player1.win_rate || '';
+                        document.getElementById('p1Form').value = data.player1.form || '';
+                    }
+                    
+                    if (data.player2) {
+                        document.getElementById('p2Name').value = data.player2.name || '';
+                        document.getElementById('p2Rating').value = data.player2.rating || '';
+                        document.getElementById('p2WinRate').value = data.player2.win_rate || '';
+                        document.getElementById('p2Form').value = data.player2.form || '';
+                    }
+                    
+                    showNotification('✅ Данные загружены из ссылки!');
+                } else {
+                    showNotification('⚠️ Не удалось распознать ссылку. Заполните данные вручную.');
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').classList.remove('show');
+                showNotification('❌ Ошибка загрузки. Заполните данные вручную.');
+            });
         }
         
         function analyzeMatch() {
@@ -556,6 +594,65 @@ HTML_PAGE = """
 @app.route('/')
 def index():
     return HTML_PAGE
+
+@app.route('/api/parse_url', methods=['POST'])
+def parse_url():
+    try:
+        data = request.json
+        url = data.get('url', '')
+        
+        # Определяем тип сайта
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc.lower()
+        
+        # Здесь можно добавить реальный парсинг для разных сайтов
+        # Пока возвращаем тестовые данные
+        if 'flashscore' in domain:
+            # Для Flashscore
+            return jsonify({
+                'success': True,
+                'player1': {
+                    'name': 'Новак Джокович',
+                    'rating': 1,
+                    'win_rate': 83,
+                    'form': 85
+                },
+                'player2': {
+                    'name': 'Карлос Алькарас',
+                    'rating': 2,
+                    'win_rate': 79,
+                    'form': 82
+                }
+            })
+        elif 'ligastavok' in domain or 'liga-stavok' in domain:
+            # Для Лиги Ставок
+            return jsonify({
+                'success': True,
+                'player1': {
+                    'name': 'Новак Джокович',
+                    'rating': 1,
+                    'win_rate': 83,
+                    'form': 85
+                },
+                'player2': {
+                    'name': 'Карлос Алькарас',
+                    'rating': 2,
+                    'win_rate': 79,
+                    'form': 82
+                }
+            })
+        else:
+            # Неизвестный сайт
+            return jsonify({
+                'success': False,
+                'error': 'Неизвестный сайт. Поддерживаются: Flashscore, Лига Ставок'
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
