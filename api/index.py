@@ -255,7 +255,7 @@ HTML_PAGE = """
                 <button onclick="loadFromUrl()">📥 Загрузить</button>
             </div>
             <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                Пример: https://www.ligastavok.ru/sports/tennis/frodin-t-rybakina-e-id-23524773-service-id-26-ext-id-1130724
+                Имена игроков будут загружены автоматически. Остальные данные заполните вручную для точного анализа.
             </p>
         </div>
         
@@ -270,27 +270,27 @@ HTML_PAGE = """
                 
                 <div class="form-group">
                     <label>Рейтинг ATP</label>
-                    <input type="number" id="p1Rating" placeholder="Рейтинг" min="1" max="2000">
+                    <input type="number" id="p1Rating" placeholder="Например: 100" min="1" max="2000">
                 </div>
                 
                 <div class="form-group">
                     <label>Процент побед (%)</label>
-                    <input type="number" id="p1WinRate" placeholder="%" min="0" max="100">
+                    <input type="number" id="p1WinRate" placeholder="Например: 60" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Победы на покрытии (%)</label>
-                    <input type="number" id="p1SurfaceRate" placeholder="%" min="0" max="100">
+                    <input type="number" id="p1SurfaceRate" placeholder="Например: 55" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Текущая форма (0-100)</label>
-                    <input type="number" id="p1Form" placeholder="0-100" min="0" max="100">
+                    <input type="number" id="p1Form" placeholder="Например: 65" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Победы в личных встречах</label>
-                    <input type="number" id="p1H2H" placeholder="Количество" min="0">
+                    <input type="number" id="p1H2H" placeholder="Например: 1" min="0">
                 </div>
                 
                 <div class="form-group">
@@ -318,27 +318,27 @@ HTML_PAGE = """
                 
                 <div class="form-group">
                     <label>Рейтинг ATP</label>
-                    <input type="number" id="p2Rating" placeholder="Рейтинг" min="1" max="2000">
+                    <input type="number" id="p2Rating" placeholder="Например: 100" min="1" max="2000">
                 </div>
                 
                 <div class="form-group">
                     <label>Процент побед (%)</label>
-                    <input type="number" id="p2WinRate" placeholder="%" min="0" max="100">
+                    <input type="number" id="p2WinRate" placeholder="Например: 60" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Победы на покрытии (%)</label>
-                    <input type="number" id="p2SurfaceRate" placeholder="%" min="0" max="100">
+                    <input type="number" id="p2SurfaceRate" placeholder="Например: 55" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Текущая форма (0-100)</label>
-                    <input type="number" id="p2Form" placeholder="0-100" min="0" max="100">
+                    <input type="number" id="p2Form" placeholder="Например: 65" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
                     <label>Победы в личных встречах</label>
-                    <input type="number" id="p2H2H" placeholder="Количество" min="0">
+                    <input type="number" id="p2H2H" placeholder="Например: 1" min="0">
                 </div>
                 
                 <div class="form-group">
@@ -396,12 +396,12 @@ HTML_PAGE = """
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
                         <label>Коэффициент на победу Игрока 1</label>
-                        <input type="number" id="p1Odds" placeholder="Например: 2.10" step="0.01" min="1.01">
+                        <input type="number" id="p1Odds" placeholder="Например: 2.00" step="0.01" min="1.01">
                     </div>
                     
                     <div class="form-group">
                         <label>Коэффициент на победу Игрока 2</label>
-                        <input type="number" id="p2Odds" placeholder="Например: 1.85" step="0.01" min="1.01">
+                        <input type="number" id="p2Odds" placeholder="Например: 2.00" step="0.01" min="1.01">
                     </div>
                 </div>
             </div>
@@ -450,21 +450,60 @@ HTML_PAGE = """
                 console.log('Response:', data);
                 
                 if (data.success && data.player1 && data.player2) {
+                    // Заполняем Игрока 1
                     if (data.player1.name) {
                         document.getElementById('p1Name').value = data.player1.name;
                     }
-                    if (data.player1.odds) {
-                        document.getElementById('p1Odds').value = data.player1.odds;
-                    }
                     
+                    // Заполняем Игрока 2
                     if (data.player2.name) {
                         document.getElementById('p2Name').value = data.player2.name;
                     }
-                    if (data.player2.odds) {
-                        document.getElementById('p2Odds').value = data.player2.odds;
+                    
+                    // Заполняем примерные данные
+                    if (!document.getElementById('p1Rating').value) {
+                        document.getElementById('p1Rating').value = '100';
+                    }
+                    if (!document.getElementById('p2Rating').value) {
+                        document.getElementById('p2Rating').value = '100';
                     }
                     
-                    showNotification('✅ Имена загружены! Заполните остальные данные.');
+                    if (!document.getElementById('p1WinRate').value) {
+                        document.getElementById('p1WinRate').value = '60';
+                    }
+                    if (!document.getElementById('p2WinRate').value) {
+                        document.getElementById('p2WinRate').value = '60';
+                    }
+                    
+                    if (!document.getElementById('p1SurfaceRate').value) {
+                        document.getElementById('p1SurfaceRate').value = '55';
+                    }
+                    if (!document.getElementById('p2SurfaceRate').value) {
+                        document.getElementById('p2SurfaceRate').value = '55';
+                    }
+                    
+                    if (!document.getElementById('p1Form').value) {
+                        document.getElementById('p1Form').value = '65';
+                    }
+                    if (!document.getElementById('p2Form').value) {
+                        document.getElementById('p2Form').value = '65';
+                    }
+                    
+                    if (!document.getElementById('p1H2H').value) {
+                        document.getElementById('p1H2H').value = '1';
+                    }
+                    if (!document.getElementById('p2H2H').value) {
+                        document.getElementById('p2H2H').value = '1';
+                    }
+                    
+                    if (!document.getElementById('p1Odds').value) {
+                        document.getElementById('p1Odds').value = '2.00';
+                    }
+                    if (!document.getElementById('p2Odds').value) {
+                        document.getElementById('p2Odds').value = '2.00';
+                    }
+                    
+                    showNotification('✅ Имена загружены! Остальные поля заполнены примерными данными. Уточните для точного анализа.');
                 } else {
                     showNotification('⚠️ ' + (data.error || 'Не удалось загрузить данные'));
                 }
@@ -597,9 +636,6 @@ def parse_url():
         print(f"Parsing URL: {url}")
         
         # Парсим URL для извлечения имён игроков
-        # Пример: frodin-t-rybakina-e-id-23524773-service-id-26-ext-id-1130724
-        
-        # Ищем часть с именами
         match = re.search(r'/tennis/([^/]+?)(?:-id-|$)', url)
         
         if not match:
@@ -609,21 +645,12 @@ def parse_url():
             players_str = match.group(1)
             print(f"Players string: {players_str}")
             
-            # Разделяем на части
             parts = players_str.split('-')
-            print(f"Parts: {parts}")
-            
-            # Убираем пустые части
             parts = [p for p in parts if p]
-            
-            # Простая эвристика: ищем разделитель
-            # Обычно формат: имя1-фамилия1-имя2-фамилия2
-            # Или: фамилия1-и-фамилия2-и
             
             player1_parts = []
             player2_parts = []
             
-            # Если есть 'и' как разделитель
             if 'i' in parts or 'and' in parts:
                 separator_index = -1
                 for i, part in enumerate(parts):
@@ -635,18 +662,12 @@ def parse_url():
                     player1_parts = parts[:separator_index]
                     player2_parts = parts[separator_index+1:]
             else:
-                # Делим пополам
                 middle = len(parts) // 2
                 player1_parts = parts[:middle]
                 player2_parts = parts[middle:]
             
-            # Собираем имена
-            p1_name = ' '.join(player1_parts).title()
-            p2_name = ' '.join(player2_parts).title()
-            
-            # Очищаем
-            p1_name = p1_name.strip()
-            p2_name = p2_name.strip()
+            p1_name = ' '.join(player1_parts).title().strip()
+            p2_name = ' '.join(player2_parts).title().strip()
             
             print(f"Player 1: {p1_name}")
             print(f"Player 2: {p2_name}")
@@ -664,7 +685,6 @@ def parse_url():
                     }
                 })
         
-        # Если не удалось распарсить, возвращаем ошибку с подсказкой
         return jsonify({
             'success': False,
             'error': 'Не удалось распознать имена из ссылки. Введите данные вручную.'
