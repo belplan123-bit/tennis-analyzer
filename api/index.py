@@ -1,9 +1,7 @@
 from flask import Flask, request, jsonify
 import json
 import re
-from urllib.parse import urlparse
-import requests
-from bs4 import BeautifulSoup
+from urllib.parse import urlparse, unquote
 
 app = Flask(__name__)
 
@@ -257,7 +255,7 @@ HTML_PAGE = """
                 <button onclick="loadFromUrl()">📥 Загрузить</button>
             </div>
             <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                Поддерживаются ссылки с Лиги Ставок (любой матч)
+                Пример: https://www.ligastavok.ru/sports/tennis/frodin-t-rybakina-e-id-23524773-service-id-26-ext-id-1130724
             </p>
         </div>
         
@@ -449,6 +447,8 @@ HTML_PAGE = """
             .then(data => {
                 document.getElementById('loading').classList.remove('show');
                 
+                console.log('Response:', data);
+                
                 if (data.success && data.player1 && data.player2) {
                     if (data.player1.name) {
                         document.getElementById('p1Name').value = data.player1.name;
@@ -464,13 +464,14 @@ HTML_PAGE = """
                         document.getElementById('p2Odds').value = data.player2.odds;
                     }
                     
-                    showNotification('✅ Имена и коэффициенты загружены! Заполните остальные данные.');
+                    showNotification('✅ Имена загружены! Заполните остальные данные.');
                 } else {
-                    showNotification('⚠️ Не удалось загрузить данные. Заполните вручную.');
+                    showNotification('⚠️ ' + (data.error || 'Не удалось загрузить данные'));
                 }
             })
             .catch(error => {
                 document.getElementById('loading').classList.remove('show');
+                console.error('Error:', error);
                 showNotification('❌ Ошибка. Заполните данные вручную.');
             });
         }
@@ -593,124 +594,84 @@ def parse_url():
         data = request.json
         url = data.get('url', '')
         
-        # Пытаемся получить данные с сайта
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
+        print(f"Parsing URL: {url}")
         
-        try:
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.content, 'html.parser')
-                
-                # Ищем имена игроков
-                player_names = []
-                
-                name_selectors = [
-                    '.participant-name',
-                    '.team-name',
-                    '.player-name',
-                    '[class*="participant"]',
-                    '[class*="player"]',
-                    '[class*="team"]'
-                ]
-                
-                for selector in name_selectors:
-                    elements = soup.select(selector)
-                    for el in elements:
-                        text = el.get_text(strip=True)
-                        if text and len(text) > 2:
-                            player_names.append(text)
-                
-                player_names = list(dict.fromkeys(player_names))
-                
-                # Ищем коэффициенты
-                odds = []
-                odd_selectors = [
-                    '.odds',
-                    '.coefficient',
-                    '[class*="odds"]',
-                    '[class*="coefficient"]',
-                    '[class*="factor"]'
-                ]
-                
-                for selector in odd_selectors:
-                    elements = soup.select(selector)
-                    for el in elements:
-                        text = el.get_text(strip=True)
-                        try:
-                            odd = float(text.replace(',', '.'))
-                            if 1.01 <= odd <= 100:
-                                odds.append(odd)
-                        except:
-                            pass
-                
-                if len(player_names) >= 2:
-                    p1_name = player_names[0]
-                    p2_name = player_names[1]
-                    
-                    p1_odds = odds[0] if len(odds) > 0 else None
-                    p2_odds = odds[1] if len(odds) > 1 else None
-                    
-                    return jsonify({
-                        'success': True,
-                        'player1': {
-                            'name': p1_name,
-                            'odds': p1_odds
-                        },
-                        'player2': {
-                            'name': p2_name,
-                            'odds': p2_odds
-                        }
-                    })
-                
-        except Exception as e:
-            print(f"Error fetching page: {e}")
+        # Парсим URL для извлечения имён игроков
+        # Пример: frodin-t-rybakina-e-id-23524773-service-id-26-ext-id-1130724
         
-        # Если не удалось, парсим URL
-        return parse_url_fallback(url)
-            
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        })
-
-def parse_url_fallback(url):
-    try:
-        match = re.search(r'/tennis/([^/]+)-id-', url)
+        # Ищем часть с именами
+        match = re.search(r'/tennis/([^/]+?)(?:-id-|$)', url)
+        
+        if not match:
+            match = re.search(r'/([a-z]+-[a-z]-[a-z]+-[a-z])', url)
         
         if match:
             players_str = match.group(1)
+            print(f"Players string: {players_str}")
+            
+            # Разделяем на части
             parts = players_str.split('-')
+            print(f"Parts: {parts}")
             
-            middle = len(parts) // 2
-            player1_parts = parts[:middle]
-            player2_parts = parts[middle:]
+            # Убираем пустые части
+            parts = [p for p in parts if p]
             
-            p1_name = ' '.join(player1_parts).replace('-', ' ').title()
-            p2_name = ' '.join(player2_parts).replace('-', ' ').title()
+            # Простая эвристика: ищем разделитель
+            # Обычно формат: имя1-фамилия1-имя2-фамилия2
+            # Или: фамилия1-и-фамилия2-и
             
-            p1_name = re.sub(r'\b(id|ext|service)\b', '', p1_name, flags=re.I).strip()
-            p2_name = re.sub(r'\b(id|ext|service)\b', '', p2_name, flags=re.I).strip()
+            player1_parts = []
+            player2_parts = []
             
-            return jsonify({
-                'success': True,
-                'player1': {
-                    'name': p1_name,
-                    'odds': None
-                },
-                'player2': {
-                    'name': p2_name,
-                    'odds': None
-                }
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': 'Не удалось распознать матч из ссылки'
-            })
+            # Если есть 'и' как разделитель
+            if 'i' in parts or 'and' in parts:
+                separator_index = -1
+                for i, part in enumerate(parts):
+                    if part in ['i', 'and']:
+                        separator_index = i
+                        break
+                
+                if separator_index > 0:
+                    player1_parts = parts[:separator_index]
+                    player2_parts = parts[separator_index+1:]
+            else:
+                # Делим пополам
+                middle = len(parts) // 2
+                player1_parts = parts[:middle]
+                player2_parts = parts[middle:]
+            
+            # Собираем имена
+            p1_name = ' '.join(player1_parts).title()
+            p2_name = ' '.join(player2_parts).title()
+            
+            # Очищаем
+            p1_name = p1_name.strip()
+            p2_name = p2_name.strip()
+            
+            print(f"Player 1: {p1_name}")
+            print(f"Player 2: {p2_name}")
+            
+            if p1_name and p2_name:
+                return jsonify({
+                    'success': True,
+                    'player1': {
+                        'name': p1_name,
+                        'odds': None
+                    },
+                    'player2': {
+                        'name': p2_name,
+                        'odds': None
+                    }
+                })
+        
+        # Если не удалось распарсить, возвращаем ошибку с подсказкой
+        return jsonify({
+            'success': False,
+            'error': 'Не удалось распознать имена из ссылки. Введите данные вручную.'
+        })
+            
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
