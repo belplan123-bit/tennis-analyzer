@@ -255,7 +255,7 @@ HTML_PAGE = """
                 <button onclick="loadFromUrl()">📥 Загрузить</button>
             </div>
             <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                Имена игроков будут загружены автоматически. Остальные данные заполните вручную для точного анализа.
+                Имена игроков будут загружены автоматически. Статистику заполните вручную для точного анализа.
             </p>
         </div>
         
@@ -270,41 +270,52 @@ HTML_PAGE = """
                 
                 <div class="form-group">
                     <label>Рейтинг ATP</label>
-                    <input type="number" id="p1Rating" placeholder="Например: 100" min="1" max="2000">
+                    <input type="number" id="p1Rating" placeholder="Например: 50" min="1" max="2000">
                 </div>
                 
                 <div class="form-group">
-                    <label>Процент побед (%)</label>
-                    <input type="number" id="p1WinRate" placeholder="Например: 60" min="0" max="100">
+                    <label>Выигранные геймы</label>
+                    <input type="number" id="p1GamesWon" placeholder="Например: 120" min="0">
                 </div>
                 
                 <div class="form-group">
-                    <label>Победы на покрытии (%)</label>
-                    <input type="number" id="p1SurfaceRate" placeholder="Например: 55" min="0" max="100">
+                    <label>Проигранные геймы</label>
+                    <input type="number" id="p1GamesLost" placeholder="Например: 80" min="0">
                 </div>
                 
                 <div class="form-group">
-                    <label>Текущая форма (0-100)</label>
-                    <input type="number" id="p1Form" placeholder="Например: 65" min="0" max="100">
+                    <label>Эйсы</label>
+                    <input type="number" id="p1Aces" placeholder="Например: 45" min="0">
                 </div>
                 
                 <div class="form-group">
-                    <label>Победы в личных встречах</label>
-                    <input type="number" id="p1H2H" placeholder="Например: 1" min="0">
+                    <label>Двойные ошибки</label>
+                    <input type="number" id="p1DoubleFaults" placeholder="Например: 15" min="0">
                 </div>
                 
                 <div class="form-group">
-                    <label>Статус травмы</label>
-                    <select id="p1Injury">
-                        <option value="healthy">Здоров</option>
-                        <option value="questionable">Под вопросом</option>
-                        <option value="injured">Травмирован</option>
-                    </select>
+                    <label>% очков на 1-й подаче</label>
+                    <input type="number" id="p1FirstServePct" placeholder="Например: 72" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
-                    <label>Уровень усталости (0-100)</label>
-                    <input type="number" id="p1Fatigue" placeholder="0-100" min="0" max="100" value="20">
+                    <label>% очков на 2-й подаче</label>
+                    <input type="number" id="p1SecondServePct" placeholder="Например: 52" min="0" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Выигранные брейк-поинты</label>
+                    <input type="number" id="p1BreakPointsWon" placeholder="Например: 30" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>Общие брейк-поинты</label>
+                    <input type="number" id="p1BreakPointsTotal" placeholder="Например: 60" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>% реализации брейк-поинтов</label>
+                    <input type="number" id="p1BreakPct" placeholder="Например: 50" min="0" max="100">
                 </div>
             </div>
             
@@ -318,41 +329,52 @@ HTML_PAGE = """
                 
                 <div class="form-group">
                     <label>Рейтинг ATP</label>
-                    <input type="number" id="p2Rating" placeholder="Например: 100" min="1" max="2000">
+                    <input type="number" id="p2Rating" placeholder="Например: 80" min="1" max="2000">
                 </div>
                 
                 <div class="form-group">
-                    <label>Процент побед (%)</label>
-                    <input type="number" id="p2WinRate" placeholder="Например: 60" min="0" max="100">
+                    <label>Выигранные геймы</label>
+                    <input type="number" id="p2GamesWon" placeholder="Например: 100" min="0">
                 </div>
                 
                 <div class="form-group">
-                    <label>Победы на покрытии (%)</label>
-                    <input type="number" id="p2SurfaceRate" placeholder="Например: 55" min="0" max="100">
+                    <label>Проигранные геймы</label>
+                    <input type="number" id="p2GamesLost" placeholder="Например: 90" min="0">
                 </div>
                 
                 <div class="form-group">
-                    <label>Текущая форма (0-100)</label>
-                    <input type="number" id="p2Form" placeholder="Например: 65" min="0" max="100">
+                    <label>Эйсы</label>
+                    <input type="number" id="p2Aces" placeholder="Например: 35" min="0">
                 </div>
                 
                 <div class="form-group">
-                    <label>Победы в личных встречах</label>
-                    <input type="number" id="p2H2H" placeholder="Например: 1" min="0">
+                    <label>Двойные ошибки</label>
+                    <input type="number" id="p2DoubleFaults" placeholder="Например: 20" min="0">
                 </div>
                 
                 <div class="form-group">
-                    <label>Статус травмы</label>
-                    <select id="p2Injury">
-                        <option value="healthy">Здоров</option>
-                        <option value="questionable">Под вопросом</option>
-                        <option value="injured">Травмирован</option>
-                    </select>
+                    <label>% очков на 1-й подаче</label>
+                    <input type="number" id="p2FirstServePct" placeholder="Например: 68" min="0" max="100">
                 </div>
                 
                 <div class="form-group">
-                    <label>Уровень усталости (0-100)</label>
-                    <input type="number" id="p2Fatigue" placeholder="0-100" min="0" max="100" value="25">
+                    <label>% очков на 2-й подаче</label>
+                    <input type="number" id="p2SecondServePct" placeholder="Например: 48" min="0" max="100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Выигранные брейк-поинты</label>
+                    <input type="number" id="p2BreakPointsWon" placeholder="Например: 25" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>Общие брейк-поинты</label>
+                    <input type="number" id="p2BreakPointsTotal" placeholder="Например: 55" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label>% реализации брейк-поинтов</label>
+                    <input type="number" id="p2BreakPct" placeholder="Например: 45" min="0" max="100">
                 </div>
             </div>
             
@@ -396,12 +418,12 @@ HTML_PAGE = """
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
                         <label>Коэффициент на победу Игрока 1</label>
-                        <input type="number" id="p1Odds" placeholder="Например: 2.00" step="0.01" min="1.01">
+                        <input type="number" id="p1Odds" placeholder="Например: 2.10" step="0.01" min="1.01">
                     </div>
                     
                     <div class="form-group">
                         <label>Коэффициент на победу Игрока 2</label>
-                        <input type="number" id="p2Odds" placeholder="Например: 2.00" step="0.01" min="1.01">
+                        <input type="number" id="p2Odds" placeholder="Например: 1.85" step="0.01" min="1.01">
                     </div>
                 </div>
             </div>
@@ -410,7 +432,7 @@ HTML_PAGE = """
         <button class="btn" onclick="analyzeMatch()">📊 Анализировать матч</button>
         
         <div class="loading" id="loading">
-            ⏳ Загружаем данные...
+            ⏳ Анализируем...
         </div>
         
         <div class="results" id="results">
@@ -450,60 +472,15 @@ HTML_PAGE = """
                 console.log('Response:', data);
                 
                 if (data.success && data.player1 && data.player2) {
-                    // Заполняем Игрока 1
                     if (data.player1.name) {
                         document.getElementById('p1Name').value = data.player1.name;
                     }
                     
-                    // Заполняем Игрока 2
                     if (data.player2.name) {
                         document.getElementById('p2Name').value = data.player2.name;
                     }
                     
-                    // Заполняем примерные данные
-                    if (!document.getElementById('p1Rating').value) {
-                        document.getElementById('p1Rating').value = '100';
-                    }
-                    if (!document.getElementById('p2Rating').value) {
-                        document.getElementById('p2Rating').value = '100';
-                    }
-                    
-                    if (!document.getElementById('p1WinRate').value) {
-                        document.getElementById('p1WinRate').value = '60';
-                    }
-                    if (!document.getElementById('p2WinRate').value) {
-                        document.getElementById('p2WinRate').value = '60';
-                    }
-                    
-                    if (!document.getElementById('p1SurfaceRate').value) {
-                        document.getElementById('p1SurfaceRate').value = '55';
-                    }
-                    if (!document.getElementById('p2SurfaceRate').value) {
-                        document.getElementById('p2SurfaceRate').value = '55';
-                    }
-                    
-                    if (!document.getElementById('p1Form').value) {
-                        document.getElementById('p1Form').value = '65';
-                    }
-                    if (!document.getElementById('p2Form').value) {
-                        document.getElementById('p2Form').value = '65';
-                    }
-                    
-                    if (!document.getElementById('p1H2H').value) {
-                        document.getElementById('p1H2H').value = '1';
-                    }
-                    if (!document.getElementById('p2H2H').value) {
-                        document.getElementById('p2H2H').value = '1';
-                    }
-                    
-                    if (!document.getElementById('p1Odds').value) {
-                        document.getElementById('p1Odds').value = '2.00';
-                    }
-                    if (!document.getElementById('p2Odds').value) {
-                        document.getElementById('p2Odds').value = '2.00';
-                    }
-                    
-                    showNotification('✅ Имена загружены! Остальные поля заполнены примерными данными. Уточните для точного анализа.');
+                    showNotification('✅ Имена загружены! Заполните статистику вручную.');
                 } else {
                     showNotification('⚠️ ' + (data.error || 'Не удалось загрузить данные'));
                 }
@@ -519,57 +496,81 @@ HTML_PAGE = """
             const p1Name = document.getElementById('p1Name').value || 'Игрок 1';
             const p2Name = document.getElementById('p2Name').value || 'Игрок 2';
             
-            const p1WinRate = parseFloat(document.getElementById('p1WinRate').value) / 100 || 0.5;
-            const p2WinRate = parseFloat(document.getElementById('p2WinRate').value) / 100 || 0.5;
-            
+            // Сбор статистики
             const p1Rating = parseInt(document.getElementById('p1Rating').value) || 100;
             const p2Rating = parseInt(document.getElementById('p2Rating').value) || 100;
             
-            const p1SurfaceRate = parseFloat(document.getElementById('p1SurfaceRate').value) / 100 || 0.5;
-            const p2SurfaceRate = parseFloat(document.getElementById('p2SurfaceRate').value) / 100 || 0.5;
+            const p1GamesWon = parseInt(document.getElementById('p1GamesWon').value) || 0;
+            const p1GamesLost = parseInt(document.getElementById('p1GamesLost').value) || 0;
+            const p2GamesWon = parseInt(document.getElementById('p2GamesWon').value) || 0;
+            const p2GamesLost = parseInt(document.getElementById('p2GamesLost').value) || 0;
             
-            const p1Form = parseFloat(document.getElementById('p1Form').value) / 100 || 0.5;
-            const p2Form = parseFloat(document.getElementById('p2Form').value) / 100 || 0.5;
+            const p1Aces = parseInt(document.getElementById('p1Aces').value) || 0;
+            const p2Aces = parseInt(document.getElementById('p2Aces').value) || 0;
             
-            const p1H2H = parseInt(document.getElementById('p1H2H').value) || 0;
-            const p2H2H = parseInt(document.getElementById('p2H2H').value) || 0;
+            const p1DoubleFaults = parseInt(document.getElementById('p1DoubleFaults').value) || 0;
+            const p2DoubleFaults = parseInt(document.getElementById('p2DoubleFaults').value) || 0;
             
-            const p1Fatigue = parseFloat(document.getElementById('p1Fatigue').value) / 100 || 0;
-            const p2Fatigue = parseFloat(document.getElementById('p2Fatigue').value) / 100 || 0;
+            const p1FirstServe = parseFloat(document.getElementById('p1FirstServePct').value) / 100 || 0.5;
+            const p2FirstServe = parseFloat(document.getElementById('p2FirstServePct').value) / 100 || 0.5;
             
-            const p1Injury = document.getElementById('p1Injury').value;
-            const p2Injury = document.getElementById('p2Injury').value;
+            const p1SecondServe = parseFloat(document.getElementById('p1SecondServePct').value) / 100 || 0.5;
+            const p2SecondServe = parseFloat(document.getElementById('p2SecondServePct').value) / 100 || 0.5;
+            
+            const p1BPWon = parseInt(document.getElementById('p1BreakPointsWon').value) || 0;
+            const p1BPTotal = parseInt(document.getElementById('p1BreakPointsTotal').value) || 0;
+            const p2BPWon = parseInt(document.getElementById('p2BreakPointsWon').value) || 0;
+            const p2BPTotal = parseInt(document.getElementById('p2BreakPointsTotal').value) || 0;
+            
+            const p1BreakPct = parseFloat(document.getElementById('p1BreakPct').value) / 100 || 0.5;
+            const p2BreakPct = parseFloat(document.getElementById('p2BreakPct').value) / 100 || 0.5;
             
             const p1Odds = parseFloat(document.getElementById('p1Odds').value) || 0;
             const p2Odds = parseFloat(document.getElementById('p2Odds').value) || 0;
             
-            let p1Strength = p1WinRate * 0.3 + 
-                            (1 - p1Rating / 100) * 0.2 + 
-                            p1SurfaceRate * 0.2 + 
-                            p1Form * 0.2 + 
-                            (p1H2H / (p1H2H + p2H2H || 1)) * 0.1;
+            // Расчет силы игроков на основе статистики
+            let p1Strength = 0;
+            let p2Strength = 0;
             
-            let p2Strength = p2WinRate * 0.3 + 
-                            (1 - p2Rating / 100) * 0.2 + 
-                            p2SurfaceRate * 0.2 + 
-                            p2Form * 0.2 + 
-                            (p2H2H / (p1H2H + p2H2H || 1)) * 0.1;
+            // Рейтинг (30%)
+            p1Strength += (1 - p1Rating / 100) * 0.3;
+            p2Strength += (1 - p2Rating / 100) * 0.3;
             
-            if (p1Injury === 'injured') p1Strength *= 0.7;
-            else if (p1Injury === 'questionable') p1Strength *= 0.85;
+            // Соотношение выигранных/проигранных геймов (20%)
+            const p1GameRatio = p1GamesWon / (p1GamesWon + p1GamesLost || 1);
+            const p2GameRatio = p2GamesWon / (p2GamesWon + p2GamesLost || 1);
+            p1Strength += p1GameRatio * 0.2;
+            p2Strength += p2GameRatio * 0.2;
             
-            if (p2Injury === 'injured') p2Strength *= 0.7;
-            else if (p2Injury === 'questionable') p2Strength *= 0.85;
+            // Эйсы (10%)
+            const totalAces = p1Aces + p2Aces || 1;
+            p1Strength += (p1Aces / totalAces) * 0.1;
+            p2Strength += (p2Aces / totalAces) * 0.1;
             
-            p1Strength *= (1 - p1Fatigue * 0.1);
-            p2Strength *= (1 - p2Fatigue * 0.1);
+            // Двойные ошибки (10% - обратный показатель)
+            const totalDF = p1DoubleFaults + p2DoubleFaults || 1;
+            p1Strength += (1 - p1DoubleFaults / totalDF) * 0.1;
+            p2Strength += (1 - p2DoubleFaults / totalDF) * 0.1;
             
+            // Подача (20%)
+            const p1ServeAvg = (p1FirstServe + p1SecondServe) / 2;
+            const p2ServeAvg = (p2FirstServe + p2SecondServe) / 2;
+            p1Strength += p1ServeAvg * 0.2;
+            p2Strength += p2ServeAvg * 0.2;
+            
+            // Брейк-поинты (10%)
+            p1Strength += p1BreakPct * 0.1;
+            p2Strength += p2BreakPct * 0.1;
+            
+            // Вероятности
             const p1Prob = (p1Strength / (p1Strength + p2Strength)) * 100;
             const p2Prob = 100 - p1Prob;
             
+            // Справедливые коэффициенты
             const fairP1Odds = (100 / p1Prob).toFixed(2);
             const fairP2Odds = (100 / p2Prob).toFixed(2);
             
+            // Value bet
             let valueBet = '';
             if (p1Odds > fairP1Odds) {
                 valueBet = `💰 Value bet: ${p1Name} (коэф. ${p1Odds} vs справедливый ${fairP1Odds})`;
@@ -597,6 +598,52 @@ HTML_PAGE = """
                             <div class="probability-fill" style="width: ${p2Prob}%"></div>
                         </div>
                     </div>
+                </div>
+                
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4>📊 Сравнение статистики:</h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <th style="text-align: left; padding: 8px;">Показатель</th>
+                            <th style="text-align: center; padding: 8px;">${p1Name}</th>
+                            <th style="text-align: center; padding: 8px;">${p2Name}</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Рейтинг ATP</td>
+                            <td style="text-align: center;">${p1Rating}</td>
+                            <td style="text-align: center;">${p2Rating}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Геймы (В/П)</td>
+                            <td style="text-align: center;">${p1GamesWon}/${p1GamesLost}</td>
+                            <td style="text-align: center;">${p2GamesWon}/${p2GamesLost}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Эйсы</td>
+                            <td style="text-align: center;">${p1Aces}</td>
+                            <td style="text-align: center;">${p2Aces}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Двойные ошибки</td>
+                            <td style="text-align: center;">${p1DoubleFaults}</td>
+                            <td style="text-align: center;">${p2DoubleFaults}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">1-я подача (%)</td>
+                            <td style="text-align: center;">${(p1FirstServe * 100).toFixed(0)}%</td>
+                            <td style="text-align: center;">${(p2FirstServe * 100).toFixed(0)}%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">2-я подача (%)</td>
+                            <td style="text-align: center;">${(p1SecondServe * 100).toFixed(0)}%</td>
+                            <td style="text-align: center;">${(p2SecondServe * 100).toFixed(0)}%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px;">Брейк-поинты (В/О)</td>
+                            <td style="text-align: center;">${p1BPWon}/${p1BPTotal}</td>
+                            <td style="text-align: center;">${p2BPWon}/${p2BPTotal}</td>
+                        </tr>
+                    </table>
                 </div>
                 
                 <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
