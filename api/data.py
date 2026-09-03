@@ -1,9 +1,5 @@
-# Данные игроков и статистика
-# Добавляйте сюда новые данные
-
 import re
 
-# База данных игроков (пример)
 PLAYERS_DATABASE = {
     'novak djokovic': {
         'rating': 1,
@@ -93,14 +89,11 @@ def get_player_stats(player_name):
     if not player_name:
         return {}
     
-    # Нормализация имени
     normalized_name = player_name.lower().strip()
     
-    # Поиск в базе
     if normalized_name in PLAYERS_DATABASE:
         return PLAYERS_DATABASE[normalized_name]
     
-    # Частичное совпадение
     for name, stats in PLAYERS_DATABASE.items():
         if normalized_name in name or name in normalized_name:
             return stats
