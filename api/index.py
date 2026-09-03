@@ -133,20 +133,6 @@ HTML_PAGE = """
             outline: none;
         }
         
-        .additional-info {
-            grid-column: 1 / -1;
-            background: #fff8e1;
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #ffd54f;
-            margin-top: 10px;
-        }
-        
-        .additional-info h4 {
-            color: #f57c00;
-            margin-bottom: 15px;
-        }
-        
         .btn {
             width: 100%;
             padding: 15px;
@@ -378,43 +364,8 @@ HTML_PAGE = """
                 </div>
             </div>
             
-            <div class="additional-info">
-                <h4>📊 Дополнительная информация</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Тип покрытия</label>
-                        <select id="surface">
-                            <option value="hard">Хард</option>
-                            <option value="clay">Грунт</option>
-                            <option value="grass">Трава</option>
-                            <option value="indoor">Indoor</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Турнир</label>
-                        <select id="tournament">
-                            <option value="grand_slam">Большой шлем</option>
-                            <option value="masters">Мастерс</option>
-                            <option value="atp500">ATP 500</option>
-                            <option value="atp250">ATP 250</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Раунд</label>
-                        <select id="round">
-                            <option value="final">Финал</option>
-                            <option value="semifinal">Полуфинал</option>
-                            <option value="quarterfinal">Четвертьфинал</option>
-                            <option value="early">Ранний раунд</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="additional-info" style="grid-column: 1 / -1; background: #e8f5e9; border-color: #4caf50;">
-                <h4 style="color: #2e7d32;">💰 Коэффициенты букмекеров</h4>
+            <div style="grid-column: 1 / -1; background: #e8f5e9; padding: 20px; border-radius: 15px; border: 2px solid #4caf50;">
+                <h4 style="color: #2e7d32; margin-bottom: 15px;">💰 Коэффициенты букмекеров</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div class="form-group">
                         <label>Коэффициент на победу Игрока 1</label>
@@ -528,7 +479,7 @@ HTML_PAGE = """
             const p1Odds = parseFloat(document.getElementById('p1Odds').value) || 0;
             const p2Odds = parseFloat(document.getElementById('p2Odds').value) || 0;
             
-            // Расчет силы игроков на основе статистики
+            // Расчет силы игроков
             let p1Strength = 0;
             let p2Strength = 0;
             
@@ -536,7 +487,7 @@ HTML_PAGE = """
             p1Strength += (1 - p1Rating / 100) * 0.3;
             p2Strength += (1 - p2Rating / 100) * 0.3;
             
-            // Соотношение выигранных/проигранных геймов (20%)
+            // Соотношение геймов (20%)
             const p1GameRatio = p1GamesWon / (p1GamesWon + p1GamesLost || 1);
             const p2GameRatio = p2GamesWon / (p2GamesWon + p2GamesLost || 1);
             p1Strength += p1GameRatio * 0.2;
@@ -547,7 +498,7 @@ HTML_PAGE = """
             p1Strength += (p1Aces / totalAces) * 0.1;
             p2Strength += (p2Aces / totalAces) * 0.1;
             
-            // Двойные ошибки (10% - обратный показатель)
+            // Двойные ошибки (10% - обратный)
             const totalDF = p1DoubleFaults + p2DoubleFaults || 1;
             p1Strength += (1 - p1DoubleFaults / totalDF) * 0.1;
             p2Strength += (1 - p2DoubleFaults / totalDF) * 0.1;
