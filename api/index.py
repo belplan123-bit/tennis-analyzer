@@ -1,11 +1,26 @@
 from flask import Flask, request, jsonify
 import json
 import re
-from urllib.parse import urlparse, unquote
 
 app = Flask(__name__)
 
-HTML_PAGE = """
+# Импорт дополнительных модулей
+try:
+    from features import load_additional_features
+    from data import get_player_stats, parse_url
+except ImportError:
+    # Если модули не найдены, используем базовые функции
+    def load_additional_features():
+        return {}
+    
+    def get_player_stats(player_name):
+        return {}
+    
+    def parse_url(url):
+        return None
+
+# Базовый HTML (можно расширять через features)
+BASE_HTML = """
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -119,7 +134,7 @@ HTML_PAGE = """
             font-size: 0.9em;
         }
         
-        .form-group input, .form-group select {
+        .form-group input {
             width: 100%;
             padding: 12px;
             border: 2px solid #ddd;
@@ -128,7 +143,7 @@ HTML_PAGE = """
             transition: border-color 0.3s;
         }
         
-        .form-group input:focus, .form-group select:focus {
+        .form-group input:focus {
             border-color: #667eea;
             outline: none;
         }
@@ -221,6 +236,19 @@ HTML_PAGE = """
             to { transform: translateX(0); }
         }
         
+        .additional-features {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            border: 2px dashed #ccc;
+        }
+        
+        .additional-features h4 {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
         @media (max-width: 600px) {
             .players { grid-template-columns: 1fr; }
             .container { padding: 15px; }
@@ -241,7 +269,7 @@ HTML_PAGE = """
                 <button onclick="loadFromUrl()">📥 Загрузить</button>
             </div>
             <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
-                Имена игроков будут загружены автоматически. Статистику заполните вручную для точного анализа.
+                Имена игроков будут загружены автоматически.
             </p>
         </div>
         
@@ -390,6 +418,13 @@ HTML_PAGE = """
             <h3>📈 Результаты анализа</h3>
             <div id="resultsContent"></div>
         </div>
+        
+        <div class="additional-features" id="additionalFeatures">
+            <h4>🔧 Дополнительные функции</h4>
+            <div id="additionalFeaturesContent">
+                <!-- Здесь будут дополнительные функции -->
+            </div>
+        </div>
     </div>
     
     <script>
@@ -420,8 +455,6 @@ HTML_PAGE = """
             .then(data => {
                 document.getElementById('loading').classList.remove('show');
                 
-                console.log('Response:', data);
-                
                 if (data.success && data.player1 && data.player2) {
                     if (data.player1.name) {
                         document.getElementById('p1Name').value = data.player1.name;
@@ -431,15 +464,43 @@ HTML_PAGE = """
                         document.getElementById('p2Name').value = data.player2.name;
                     }
                     
-                    showNotification('✅ Имена загружены! Заполните статистику вручную.');
+                    // Загрузка дополнительной статистики
+                    loadPlayerStats(data.player1.name, 1);
+                    loadPlayerStats(data.player2.name, 2);
+                    
+                    showNotification('✅ Имена загружены!');
                 } else {
                     showNotification('⚠️ ' + (data.error || 'Не удалось загрузить данные'));
                 }
             })
             .catch(error => {
                 document.getElementById('loading').classList.remove('show');
-                console.error('Error:', error);
                 showNotification('❌ Ошибка. Заполните данные вручную.');
+            });
+        }
+        
+        function loadPlayerStats(playerName, playerNumber) {
+            fetch('/api/player_stats', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: playerName})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.stats) {
+                    const prefix = 'p' + playerNumber;
+                    
+                    if (data.stats.rating) document.getElementById(prefix + 'Rating').value = data.stats.rating;
+                    if (data.stats.gamesWon) document.getElementById(prefix + 'GamesWon').value = data.stats.gamesWon;
+                    if (data.stats.gamesLost) document.getElementById(prefix + 'GamesLost').value = data.stats.gamesLost;
+                    if (data.stats.aces) document.getElementById(prefix + 'Aces').value = data.stats.aces;
+                    if (data.stats.doubleFaults) document.getElementById(prefix + 'DoubleFaults').value = data.stats.doubleFaults;
+                    if (data.stats.firstServePct) document.getElementById(prefix + 'FirstServePct').value = data.stats.firstServePct;
+                    if (data.stats.secondServePct) document.getElementById(prefix + 'SecondServePct').value = data.stats.secondServePct;
+                    if (data.stats.bpWon) document.getElementById(prefix + 'BreakPointsWon').value = data.stats.bpWon;
+                    if (data.stats.bpTotal) document.getElementById(prefix + 'BreakPointsTotal').value = data.stats.bpTotal;
+                    if (data.stats.breakPct) document.getElementById(prefix + 'BreakPct').value = data.stats.breakPct;
+                }
             });
         }
         
@@ -447,7 +508,6 @@ HTML_PAGE = """
             const p1Name = document.getElementById('p1Name').value || 'Игрок 1';
             const p2Name = document.getElementById('p2Name').value || 'Игрок 2';
             
-            // Сбор статистики
             const p1Rating = parseInt(document.getElementById('p1Rating').value) || 100;
             const p2Rating = parseInt(document.getElementById('p2Rating').value) || 100;
             
@@ -479,49 +539,39 @@ HTML_PAGE = """
             const p1Odds = parseFloat(document.getElementById('p1Odds').value) || 0;
             const p2Odds = parseFloat(document.getElementById('p2Odds').value) || 0;
             
-            // Расчет силы игроков
             let p1Strength = 0;
             let p2Strength = 0;
             
-            // Рейтинг (30%)
             p1Strength += (1 - p1Rating / 100) * 0.3;
             p2Strength += (1 - p2Rating / 100) * 0.3;
             
-            // Соотношение геймов (20%)
             const p1GameRatio = p1GamesWon / (p1GamesWon + p1GamesLost || 1);
             const p2GameRatio = p2GamesWon / (p2GamesWon + p2GamesLost || 1);
             p1Strength += p1GameRatio * 0.2;
             p2Strength += p2GameRatio * 0.2;
             
-            // Эйсы (10%)
             const totalAces = p1Aces + p2Aces || 1;
             p1Strength += (p1Aces / totalAces) * 0.1;
             p2Strength += (p2Aces / totalAces) * 0.1;
             
-            // Двойные ошибки (10% - обратный)
             const totalDF = p1DoubleFaults + p2DoubleFaults || 1;
             p1Strength += (1 - p1DoubleFaults / totalDF) * 0.1;
             p2Strength += (1 - p2DoubleFaults / totalDF) * 0.1;
             
-            // Подача (20%)
             const p1ServeAvg = (p1FirstServe + p1SecondServe) / 2;
             const p2ServeAvg = (p2FirstServe + p2SecondServe) / 2;
             p1Strength += p1ServeAvg * 0.2;
             p2Strength += p2ServeAvg * 0.2;
             
-            // Брейк-поинты (10%)
             p1Strength += p1BreakPct * 0.1;
             p2Strength += p2BreakPct * 0.1;
             
-            // Вероятности
             const p1Prob = (p1Strength / (p1Strength + p2Strength)) * 100;
             const p2Prob = 100 - p1Prob;
             
-            // Справедливые коэффициенты
             const fairP1Odds = (100 / p1Prob).toFixed(2);
             const fairP2Odds = (100 / p2Prob).toFixed(2);
             
-            // Value bet
             let valueBet = '';
             if (p1Odds > fairP1Odds) {
                 valueBet = `💰 Value bet: ${p1Name} (коэф. ${p1Odds} vs справедливый ${fairP1Odds})`;
@@ -559,41 +609,13 @@ HTML_PAGE = """
                             <th style="text-align: center; padding: 8px;">${p1Name}</th>
                             <th style="text-align: center; padding: 8px;">${p2Name}</th>
                         </tr>
-                        <tr>
-                            <td style="padding: 8px;">Рейтинг ATP</td>
-                            <td style="text-align: center;">${p1Rating}</td>
-                            <td style="text-align: center;">${p2Rating}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px;">Геймы (В/П)</td>
-                            <td style="text-align: center;">${p1GamesWon}/${p1GamesLost}</td>
-                            <td style="text-align: center;">${p2GamesWon}/${p2GamesLost}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px;">Эйсы</td>
-                            <td style="text-align: center;">${p1Aces}</td>
-                            <td style="text-align: center;">${p2Aces}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px;">Двойные ошибки</td>
-                            <td style="text-align: center;">${p1DoubleFaults}</td>
-                            <td style="text-align: center;">${p2DoubleFaults}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px;">1-я подача (%)</td>
-                            <td style="text-align: center;">${(p1FirstServe * 100).toFixed(0)}%</td>
-                            <td style="text-align: center;">${(p2FirstServe * 100).toFixed(0)}%</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px;">2-я подача (%)</td>
-                            <td style="text-align: center;">${(p1SecondServe * 100).toFixed(0)}%</td>
-                            <td style="text-align: center;">${(p2SecondServe * 100).toFixed(0)}%</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px;">Брейк-поинты (В/О)</td>
-                            <td style="text-align: center;">${p1BPWon}/${p1BPTotal}</td>
-                            <td style="text-align: center;">${p2BPWon}/${p2BPTotal}</td>
-                        </tr>
+                        <tr><td style="padding: 8px;">Рейтинг ATP</td><td style="text-align: center;">${p1Rating}</td><td style="text-align: center;">${p2Rating}</td></tr>
+                        <tr><td style="padding: 8px;">Геймы (В/П)</td><td style="text-align: center;">${p1GamesWon}/${p1GamesLost}</td><td style="text-align: center;">${p2GamesWon}/${p2GamesLost}</td></tr>
+                        <tr><td style="padding: 8px;">Эйсы</td><td style="text-align: center;">${p1Aces}</td><td style="text-align: center;">${p2Aces}</td></tr>
+                        <tr><td style="padding: 8px;">Двойные ошибки</td><td style="text-align: center;">${p1DoubleFaults}</td><td style="text-align: center;">${p2DoubleFaults}</td></tr>
+                        <tr><td style="padding: 8px;">1-я подача (%)</td><td style="text-align: center;">${(p1FirstServe * 100).toFixed(0)}%</td><td style="text-align: center;">${(p2FirstServe * 100).toFixed(0)}%</td></tr>
+                        <tr><td style="padding: 8px;">2-я подача (%)</td><td style="text-align: center;">${(p1SecondServe * 100).toFixed(0)}%</td><td style="text-align: center;">${(p2SecondServe * 100).toFixed(0)}%</td></tr>
+                        <tr><td style="padding: 8px;">Брейк-поинты (В/О)</td><td style="text-align: center;">${p1BPWon}/${p1BPTotal}</td><td style="text-align: center;">${p2BPWon}/${p2BPTotal}</td></tr>
                     </table>
                 </div>
                 
@@ -616,6 +638,20 @@ HTML_PAGE = """
             document.getElementById('results').classList.add('show');
             document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
         }
+        
+        // Загрузка дополнительных функций
+        function loadAdditionalFeatures() {
+            fetch('/api/features')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.features) {
+                    document.getElementById('additionalFeaturesContent').innerHTML = data.features.html;
+                }
+            });
+        }
+        
+        // Загрузка при старте
+        loadAdditionalFeatures();
     </script>
 </body>
 </html>
@@ -623,83 +659,37 @@ HTML_PAGE = """
 
 @app.route('/')
 def index():
-    return HTML_PAGE
+    return BASE_HTML
 
 @app.route('/api/parse_url', methods=['POST'])
-def parse_url():
+def api_parse_url():
     try:
         data = request.json
         url = data.get('url', '')
+        result = parse_url(url)
         
-        print(f"Parsing URL: {url}")
-        
-        # Парсим URL для извлечения имён игроков
-        match = re.search(r'/tennis/([^/]+?)(?:-id-|$)', url)
-        
-        if not match:
-            match = re.search(r'/([a-z]+-[a-z]-[a-z]+-[a-z])', url)
-        
-        if match:
-            players_str = match.group(1)
-            print(f"Players string: {players_str}")
-            
-            parts = players_str.split('-')
-            parts = [p for p in parts if p]
-            
-            player1_parts = []
-            player2_parts = []
-            
-            if 'i' in parts or 'and' in parts:
-                separator_index = -1
-                for i, part in enumerate(parts):
-                    if part in ['i', 'and']:
-                        separator_index = i
-                        break
-                
-                if separator_index > 0:
-                    player1_parts = parts[:separator_index]
-                    player2_parts = parts[separator_index+1:]
-            else:
-                middle = len(parts) // 2
-                player1_parts = parts[:middle]
-                player2_parts = parts[middle:]
-            
-            p1_name = ' '.join(player1_parts).title().strip()
-            p2_name = ' '.join(player2_parts).title().strip()
-            
-            print(f"Player 1: {p1_name}")
-            print(f"Player 2: {p2_name}")
-            
-            if p1_name and p2_name:
-                return jsonify({
-                    'success': True,
-                    'player1': {
-                        'name': p1_name,
-                        'odds': None
-                    },
-                    'player2': {
-                        'name': p2_name,
-                        'odds': None
-                    }
-                })
-        
-        return jsonify({
-            'success': False,
-            'error': 'Не удалось распознать имена из ссылки. Введите данные вручную.'
-        })
-            
+        if result:
+            return jsonify({'success': True, **result})
+        else:
+            return jsonify({'success': False, 'error': 'Не удалось распознать'})
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        })
+        return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/api/analyze', methods=['POST'])
-def analyze():
+@app.route('/api/player_stats', methods=['POST'])
+def api_player_stats():
     try:
         data = request.json
-        return jsonify({'success': True, 'data': data})
+        player_name = data.get('name', '')
+        stats = get_player_stats(player_name)
+        return jsonify({'success': True, 'stats': stats})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/features', methods=['GET'])
+def api_features():
+    try:
+        features = load_additional_features()
+        return jsonify({'success': True, 'features': features})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
